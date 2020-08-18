@@ -33,6 +33,8 @@ PROBLEM 2
 
  - If the the sides of the rectangle are just touching then its not being considered covered
 
+ - Assuming partially covered rectangles as covered else there is only one rectangle which is covered in the image, In python implementation I have randomly added some rectangles and they are not the representation of the image shared
+
  Unit Tests
  
  - python -m unittest start_test
