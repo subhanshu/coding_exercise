@@ -9,7 +9,7 @@ import io
 
 
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
+SCOPES = ['https://www.googleapis.com/auth/drive']
 
 
 creds = None
@@ -36,25 +36,40 @@ drive_service = build('drive', 'v3', credentials=creds)
 sheets_service = build('sheets', 'v4', credentials=creds)
 
 def download_file(file_id):
+    if type(file_id) not in [str, unicode]:
+        raise TypeError("Invalid File ID")
+    result=False
     request = drive_service.files().export_media(fileId=file_id,
                                                 mimeType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     fh = io.BytesIO()
     downloader = MediaIoBaseDownload(fh, request)
     done = False
-    while done is False:
-        status, done = downloader.next_chunk()
-        print("Download %d%%.", int(status.progress() * 100))
-    with open('downloaded_excel.xlsx', 'wb') as f:
-        f.write(fh.getvalue())
-       
+    try:
+        while done is False:
+            status, done = downloader.next_chunk()
+            print("Download %d%%.", int(status.progress() * 100))
+    except:
+        raise IOError("Unable to download files")
+    try:
+        with open('downloaded_excel.xlsx', 'wb') as f:
+            f.write(fh.getvalue())
+        result = True
+        
+    except:
+        raise IOError("unable to write file to disk")
+    
+    return result
 
 
 def upload_file(filename):
     file_metadata = {'name': filename, 'mimeType': 'application/vnd.google-apps.spreadsheet'}
-    media = MediaFileUpload(filename)
-    file = drive_service.files().create(body=file_metadata,
-                                        media_body=media,
-                                        fields='id').execute()
+    try:
+        media = MediaFileUpload(filename)
+        file = drive_service.files().create(body=file_metadata,
+                                            media_body=media,
+                                            fields='id').execute()
+    except:
+        raise IOError("Error uploading file")
     file_id = file.get('id')
     print('File ID:', file_id)
     return file_id
